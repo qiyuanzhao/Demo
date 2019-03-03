@@ -18,7 +18,7 @@ public class RequestDemo {
 
        List<Weixin> lis =  restTemplate.getForEntity("", List.class).getBody();
 
-
+//three
 
 
     }
