@@ -6,56 +6,100 @@ import org.apache.http.client.utils.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
-import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class RequestDemo {
 
     private Logger logger = LoggerFactory.getLogger(RequestDemo.class);
 
+    private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+
+    //资生堂精华 752    SK-II精华 755   海蓝之谜精华 756   莱珀妮精华 757  肌肤之钥精华 758  娇兰精华 759  科颜氏精华 760  兰蔻精华 770
+    private String[] ids = {"752"};//, "", "", "", "", "", "", "", "", ""
+    private String[] keywords = {"weixin","redbook", "tmall","weibo"};//,"weixin","redbook", "tmall","weibo"
+
     @Autowired
     private RestTemplate restTemplate;
 
-    private static String startUrl = "http://service.lavector.com/api/v1/messages?&sites=weixin&projectId=494&sort=latest&from=20180901&to=20190301&pageNum=";
-    private static String endUrl = "&numToLoad=500";
+    private static String startUrl = "http://service.lavector.com/api/v1/messages?&sites=";
+    private static String endUrl = "&numToLoad=50";
 
     public void downloder() {
-        int code = 1;
-        File file = getFile("G:/text/newWeixin/weixin", "sk-II.txt");
-
         PrintWriter printWriter = null;
-        try {
-            printWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"));
 
-            FileInputStream fis = new FileInputStream(file);
-            int available = fis.available();
-            if (available == 0) {
-                String title = "类型,用户,省份,时间,转发数,评论数,点赞数,情感指数,标题,链接,内容";
-                printWriter.println(title);
-            }
-            while (true) {
-                String url = startUrl + code + endUrl;
-                Weixin[] forObject = restTemplate.getForObject(url, Weixin[].class);
-                if (forObject.length <= 0) {
-                    break;
-                } else {
-                    handleData(Arrays.asList(forObject), printWriter);
-                    code++;
+        Map<String, String> map = new HashMap<>();
+//        map.put("752", "资生堂精华");//20180506 weibo
+//        map.put("755","SK-II精华");
+//        map.put("770","兰蔻精华");
+
+        map.put("756","海蓝之谜精华");
+        map.put("757","莱珀妮精华");
+        map.put("758","肌肤之钥精华");
+        map.put("759","娇兰精华");
+        map.put("760","科颜氏精华");
+
+
+        try {
+            for (String id : map.keySet()) {
+                for (String keyword : keywords) {
+                    File file = getFile("G:/text/newWeixin/weixin", map.get(id) + "_" + keyword + ".txt");
+                    printWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"));
+
+                    FileInputStream fis = new FileInputStream(file);
+                    int available = fis.available();
+                    if (available == 0) {
+                        String title = "类型,用户,省份,时间,转发数,评论数,点赞数,情感指数,发布来源,标题,链接,原文内容,内容";
+                        printWriter.println(title);
+                    }
+
+                    Date start = simpleDateFormat.parse("20180301");
+                    Date end = simpleDateFormat.parse("20180901");
+
+                    LocalDate startLocalDate = LocalDate.from(start.toInstant().atZone(ZoneId.systemDefault()));
+                    LocalDate endLocalDate = LocalDate.from(end.toInstant().atZone(ZoneId.systemDefault()));
+
+
+                    while (startLocalDate.isBefore(endLocalDate)) {
+                        int code = 1;
+                        while (true) {
+                            String url = startUrl + keyword + "&projectId=" + id + "&sort=latest&from=" + startLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE) + "&to=" + startLocalDate.format(DateTimeFormatter.BASIC_ISO_DATE) + "&pageNum=" + code + endUrl;
+                            logger.info("url:{}", url);
+                            Weixin[] forObject = restTemplate.getForObject(url, Weixin[].class);
+                            logger.info(" length:{}", forObject.length);
+                            if (forObject.length <= 0) {
+                                break;
+                            } else {
+                                handleData(Arrays.asList(forObject), printWriter);
+                                printWriter.flush();
+                                code++;
+                            }
+                        }
+                        startLocalDate = startLocalDate.plusDays(1);
+                    }
                 }
+
             }
             printWriter.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
+
+
     }
 
     private void handleData(List<Weixin> wexinData, PrintWriter printWriter) {
@@ -63,41 +107,71 @@ public class RequestDemo {
             logger.info("开始写入文件....");
             if (weixin.getType() != null) {
                 printWriter.print(handleType(weixin.getType()) + ",");
-            }else {
+            } else {
                 printWriter.print("" + ",");
             }
             printWriter.print(weixin.getUser().getDisplayName() + ",");
             if (weixin.getProvince() != null) {
                 printWriter.print(weixin.getProvince() + ",");
-            }else {
+            } else {
                 printWriter.print("" + ",");
             }
             printWriter.print(handleTime(weixin.gettC()) + ",");
 
             if (weixin.getReposts() != null) {
                 printWriter.print(weixin.getReposts() + ",");
-            }else {
+            } else {
                 printWriter.print("" + ",");
             }
             if (weixin.getComments() != null) {
                 printWriter.print(weixin.getComments() + ",");
-            }else {
+            } else {
                 printWriter.print("" + ",");
             }
             if (weixin.getLikes() != null) {
                 printWriter.print(weixin.getLikes() + ",");
-            }else {
+            } else {
                 printWriter.print("" + ",");
             }
             if (weixin.getpScore() != null) {
                 printWriter.print(weixin.getpScore() + ",");
-            }else {
+            } else {
                 printWriter.print("" + ",");
             }
-            printWriter.print(weixin.getTitle() + ",");
-            printWriter.print(weixin.getUrl() + ",");
-            printWriter.println(handleContent(weixin.getContent()));
+            if (!StringUtils.isEmpty(weixin.getClient())&&weixin.getClient().contains("<a")) {
+                logger.info("发布来源:" + weixin.getClient());
+                String substring = weixin.getClient().substring(weixin.getClient().indexOf(">", 1) + 1, weixin.getClient().indexOf("<", 2));
+                printWriter.print(substring + ",");
+            } else {
+                printWriter.print("" + ",");
+            }
+
+            if (!StringUtils.isEmpty(weixin.getTitle())) {
+                printWriter.print(weixin.getTitle() + ",");
+            } else if (!StringUtils.isEmpty(weixin.getContext())) {
+                printWriter.print(weixin.getContext() + ",");
+            } else {
+                printWriter.print("" + ",");
+            }
+            if (weixin.getUrl() != null) {
+                printWriter.print(weixin.getUrl() + ",");
+            } else {
+                printWriter.print("" + ",");
+            }
+            if (weixin.getQuotedMessage() != null) {
+                printWriter.print(handleContent(weixin.getQuotedMessage()));
+            } else {
+                printWriter.print("");
+            }
+            if (weixin.getContent() != null) {
+                printWriter.println(handleContent(weixin.getContent()));
+            } else {
+                printWriter.println("");
+            }
+
+
             logger.info("完成一条的写入....");
+            logger.info(handleTime(weixin.gettC()));
         }
     }
 
@@ -133,6 +207,37 @@ public class RequestDemo {
             }
         }
         return file;
+    }
+
+
+    public static void main(String[] args) {
+        String str = "598";
+        String[] split = str.split(",");
+        System.out.println(split);
+    }
+
+
+    public static void get() {
+
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+
+
+        Date end = null;
+        Date start = null;
+        try {
+            end = simpleDateFormat.parse("20190301");
+            start = simpleDateFormat.parse("20180301");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        LocalDate startLocalDate = LocalDate.from(start.toInstant().atZone(ZoneId.systemDefault()));
+        LocalDate endLocalDate = LocalDate.from(end.toInstant().atZone(ZoneId.systemDefault()));
+
+        while (startLocalDate.isBefore(endLocalDate)) {
+            System.out.println(startLocalDate.toString());
+            startLocalDate = startLocalDate.plusDays(1);
+        }
     }
 
 

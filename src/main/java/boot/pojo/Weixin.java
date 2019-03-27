@@ -8,12 +8,15 @@ public class Weixin {
     private Integer videoCount; //
     private String content; //内容
     private User user;  //用户
-    private String title; //标题
+    private String context; //标题
     private Integer likes; //点赞数
     private Integer reposts;//转发数
     private Integer comments; //评论数
     private String province; //省份
     private String pScore; //情感指数
+    private String title;
+    private String client;//发布来源
+    private String quotedMessage;
 
 
 
@@ -29,16 +32,8 @@ public class Weixin {
         return videoCount;
     }
 
-    public String getContent() {
-        return content;
-    }
-
     public User getUser() {
         return user;
-    }
-
-    public String getTitle() {
-        return title;
     }
 
     public void setUrl(String url) {
@@ -53,16 +48,8 @@ public class Weixin {
         this.videoCount = videoCount;
     }
 
-    public void setContent(String content) {
-        this.content = content;
-    }
-
     public void setUser(User user) {
         this.user = user;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
     }
 
     public String getType() {
@@ -111,5 +98,44 @@ public class Weixin {
 
     public void setpScore(String pScore) {
         this.pScore = pScore;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public String getContext() {
+        return context;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getClient() {
+        return client;
+    }
+    public void setClient(String client) {
+        this.client = client;
+    }
+
+    public String getQuotedMessage() {
+        return quotedMessage;
+    }
+
+    public void setQuotedMessage(String quotedMessage) {
+        this.quotedMessage = quotedMessage;
     }
 }
