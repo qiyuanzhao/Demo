@@ -53,7 +53,7 @@ public class RequestDemo {
         map.put("759","娇兰精华");
         map.put("760","科颜氏精华");
         map.put("761","git1");
-        map.put("761","git2");
+        map.put("761","gittttt222");
 
 
         try {
