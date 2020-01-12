@@ -52,6 +52,7 @@ public class RequestDemo {
         map.put("758","肌肤之钥精华");
         map.put("759","娇兰精华");
         map.put("760","科颜氏精华");
+        map.put("761","git1");
         map.put("761","git2");
 
 
