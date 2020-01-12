@@ -46,6 +46,7 @@ public class RequestDemo {
 //        map.put("752", "资生堂精华");//20180506 weibo
 //        map.put("755","SK-II精华");
 //        map.put("770","兰蔻精华");
+//        map.put("770","兰蔻精华");
 
         map.put("756","海蓝之谜精华");
         map.put("757","莱珀妮精华");
